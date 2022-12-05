@@ -1,0 +1,55 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+
+int main()
+{
+    int pipe1[2]; // this is the array for the pipe
+
+    if (pipe(pipe1) == -1){ //intialize pipe 
+        return 1; //  if it fails
+    }
+
+    int child = fork(); // creates child process "child"
+    if (child < 0){  // checks for error      
+        return 1;
+    }
+
+    if (child > 0) {   // if child exist then      
+        int child2 = fork(); // creates child proecess "child2"
+
+        if (child2 < 0){ // checks if   fails             
+            return 1;
+        }
+
+        else if (child2 > 0){            
+            wait(NULL); // waits for child 
+            close(pipe1[1]); //closes write pipe1
+            wait(NULL); // waits for child2
+        }
+
+        else if (child2 == 0){
+            close(1); // closes stdout
+            close(pipe1[0]); // closes read pipe   
+            dup(pipe1[1]); // creates new write pipe
+            char *lsf[3] = {"ls", "-F", NULL}; // array holds the commands ls -F for execvp.             
+            execvp(lsf[0], lsf); // runs the array like  command  ls -F        
+        }
+      
+    } 
+    else if (child == 0){
+        
+        close(0); //close std in 
+        close(pipe1[1]); // closes write pipe
+        dup(pipe1[0]); //creates new pipe
+        close(pipe1[0]); // closes new pipe
+        char *nl[2] = {"nl", NULL}; // array holds the commands nl for execvp
+        execvp(nl[0], nl); // executes the n1 command.
+       
+    }
+
+    
+    return 0;
+}
