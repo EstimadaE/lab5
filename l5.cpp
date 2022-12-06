@@ -1,6 +1,12 @@
 #include<unistd.h>
 #include<iostream>
 #include<string>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 using namespace std;
 
 /*
@@ -58,38 +64,10 @@ int main()
     {
         close(pipe1[0]); // close read
         write(pipe1[1], &mess, sizeof(mess));
+        close(pipe1[1]);
 
+        wait(NULL); // wait for child to send string
 
-
-    }
-    else // child process
-    {
-       close(pipe1[1]); // cloose weite
-
-        read(pipe1[0], &mess, sizeof(mess));
-	    cout << "Child recieved this: " << mess << endl;
-
-        close(pipe1[0]);
-
-    }
-
-
-    /*
-    -Child sends Message to Parent process
-    a) The writer (child) closes its read end of the second pipe, and the reader (Parent) closes its write end of the second pipe.    
-    b) The parent and child communicate by using write ( ) and read ( ) calls respectively.
-    c) Child sends a message to Parent, Parent will print the message from the  child(specifying that it is the child printing the parents message)
-    4) Each process closes its active pipe descriptor when it’s finishes with it.
-*/
-    if (pid == 0) //cjild
-    {        
-        close(pipe2[0]); //close read
-        write(pipe2[1], &m2, sizeof(m2));
-
-    }
-
-    else // parent
-    {
         close(pipe2[1]); //close write
         read(pipe2[0], &m2, sizeof(m2));
 
@@ -99,11 +77,25 @@ int main()
 
 
     }
+    else // child process
+    {
+       close(pipe1[1]); // cloose weite
 
+        read(pipe1[0], &mess, sizeof(mess)); // reads message from first pipe
+	    cout << "Child recieved this: " << mess << endl;
 
+        close(pipe1[0]);
+        close(pipe2[0]); //close read
+        
+        write(pipe2[1], &m2, sizeof(m2));
 
-
-  
-    return 0;
-    
+    }
 }
+
+    /*
+    -Child sends Message to Parent process
+    a) The writer (child) closes its read end of the second pipe, and the reader (Parent) closes its write end of the second pipe.    
+    b) The parent and child communicate by using write ( ) and read ( ) calls respectively.
+    c) Child sends a message to Parent, Parent will print the message from the  child(specifying that it is the child printing the parents message)
+    4) Each process closes its active pipe descriptor when it’s finishes with it.
+*/
